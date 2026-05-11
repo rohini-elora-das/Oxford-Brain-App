@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+
+  <title>Brain App</title>
+
+  <!--CSS style-->
+  <link rel="stylesheet" type="text/css" href="myCSS.css">
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
+
+  <!--required libraries-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+  <!-- tasks part functions-->
+  <script src="graph.js"></script><!--define maps dimentions and missing links-->
+  <script src="graphProgressionFuncs.js"></script><!--define maps dimentions and missing links-->
+  <script src="utilities.js"></script><!--helper functions-->
+  <script src="learnRandomPairs.js"></script><!--learning phase - learn from random (non-consecutive) pairs. previously called coverPair-->
+  <script src="ajaxFunctions.js"></script>
+</head>
+
+<body>
+
+  <div id="regForm">
+
+    <!--start-->
+    <!--subject details:-->
+    <div id="startDiv" align="center" class="tab">
+      <h1>Fitbit App for the Brain: Group A, Session 1 <br></h1>
+      <p><b><i>Oxford Centre for Functional MRI of the Brain</i></b><p>
+   <p><i>Rohini Das with Alon Baram & Tim Behrens</i></p><br>
+      <p><b>Please note that there are two sessions to complete this experiment. This link is for Session 1 only. Play Session 1 at 08:00 hours in the morning today, and play Session 2 twelve hours later at 20:00 hours tonight. </b></p>
+      <p><b>Once you enter your Prolific ID for this session, I will invite you to the Session 2 study where you will find the Session 2 link. </b></p>
+            
+      <p><b>If the times assigned for these two sessions do not work for you, you may remove yourself as a participant from this study. </b></p><br>
+      <p>Enter your Prolific subject ID (or your full name if you don't have a subject ID):</p><br>
+      <div style="text-align:center;">
+          <input type="text" id="subjectId" value="" >
+      </div>
+      <div style="text-align:center;">
+          <!--when pressing "click when ready to start", call initExp() [] which will look for tables for this subject, and if they don't exist, create them.-->
+          <button class="button buttonNextGame" onclick="initExp()">Click when ready to start</button>
+      </div>
+    </div>
+
+    <!--task description:-->
+
+    <div align="left" id="globalInstructions" class="tab">
+      <h1>Task description:<br></h1>
+      <p>
+      We are playing a card memory game. Each picture is a card.<br>
+      <br>This game is divided into two sessions: (1) <span class="bolded">Learning</span> and (2) Testing.<br>
+    In this first session, the learning session, there will be several rounds. <br>In each round you will learn card associations in pairs. <br>
+<br>
+        Follow the instruction on each part of the game.
+      </p>
+      
+        <img src="LRPExpDemo4" height="500" width="500" alt="LRP Explain Steps">
+
+      <button class="button buttonNextGame" id="startTaskButton" onclick="choosePart()">Start</button>
+    </div>
+    
+
+
+    <!-- Passive learning from consecutive pairs of stimuli (random walk) -->
+
+    <!-- <div id="learnRandomWalk"  class="tab" >
+      <p id="instructions_learnRandomWalk">
+        Try to remember the associations between the pictures that appears one after the other.<br>
+        A picture can be associated to more than one/two pictures.
+        <br> Say 'in your head' a sentence that connects the 2 pictures, it will help you to remember the associations. <br>
+        Press enter to see the next card."
+      </p>
+      <div id="lrnWlkImagesDiv" align="center">
+        <img id="lrnWlk_imgOld"> <img id="lrnWlk_imgNew">
+      </div>
+      <button class="button buttonNextTrial" id="learnWalkButton" align="center"
+      onclick="checkKey_learnWalk(0)">Learn Walk</button>
+      <button class="button buttonNextGame" id="endLearnWalkButton" align="center"
+      onclick="endAllTrials_learnRandomWalk()">Next Part</button>
+    </div> -->
+
+    <!--Passive learning from random (non-consecutive) pairs of stimuli-->
+
+    <div id="learnRandomPairsTab" class="tab">
+      <div><p align="left" id="instructions_learnRandomPairs"> Try to remember the associations between the pair of pictures.       <br> 
+<br>The pairs are presented in a random order, so you should only be learning the one pair at a time.   
+      <br> 
+      For example, in round 1 you may learn that a tennis ball card is paired with a penguin card and in round 2 you may learn that a strawberry card is paired with a jacket card. This does not mean that a penguin card is paired with a strawberry card. <br> 
+
+<br>A card can be paired to multiple cards. <br>
+   For example, in round 3 you may learn that a tennis ball card is also paired with a scarf card. <br>
+   <br> <b>To help you remember the associations, try to make a story connecting the 2 pictures. <br>
+    For example, in a round if you learn that a strawberry card and a jacket card are a paired. You can remember this association by saying a sentence like, "In the morning I put on my jacket so that I wouldn't get cold while strawberry picking".</b><br><br>
+    <b>Note that though there will only be 24 different card pair associations </b> that will be presented to you, these pairs will be presented repeatedly, making for a higher round number. <br>
+       <br><i> Press enter to see the next pair of pictures.  </i><br>       </p>
+       <p id="lrpscore"> </p>
+        <div id="lrnPrsImagesDiv" align="center">
+          <img id="lrnPrs_img1"><img id="lrnPrs_img2">
+        </div>
+      </div>
+      <div>
+        <p id="threeDots_learnRandomPairs">...</p>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="endDiv" align="left" class="tab">
+    <h1>Well done! You have completed the learning session of this experiment. Your next session will begin in 12 hours: 20:00 hours tonight<br></h1>
+  </div>
+
+
+  <!-- **********************   begin javascript script   ********************-->
+
+  <script>
+  /* the task is organised such that there are 8 learning runs (each is a cycle of all tasks)
+  of 2 maps and 7 inference runs of a third map*/
+
+  // initialise exp object - holding all the variables abut the entire experiment.
+  var exp = {}
+  // current run of the entire task. e.g. when some parts have completed x+1 runs and others
+  // completed x, exp.curRun = x+1. Starts counting from 1, not 0.
+  exp.curRun = 0; // A&R: this is just a dummy variable so that we don't need to change the functions recording it in the tables.
+  exp.curMap = -1; // current map
+  exp.imgFileNamesArr=[]; // the pictures from directory array
+  exp.totalScore = 0; // total points earned.
+  exp.maxNumNodes=36; // maximal number of nodes/pictures in an array (map)
+  exp.nImgsInDir = 50; // total number of images in imgDir
+
+  // parts (tasks) objects - these will be useful to have better control over global variables
+
+  class partObj {
+    constructor() {
+      this.trial = 1 // current trial. if not currently playing this task part, set to -1. start counting (first trial) from 1, not 0).
+    }
+  }
+  // define obejects for the blocks of the different tasks.
+  let lrnPrsObj = new partObj
+  // number of trials in each run. previously called maxCovP.
+  lrnPrsObj.trial = 0;
+  lrnPrsObj.maxSet = 3; // how many rounds of seeing all pairs. Note that each pair actually appears twice in eacj round. The number of pairs in a round is in G.pairsMat.length(). in a 4x4 square there are 48 (24) pairs. 
+
+  // G.object
+  var G= {};
+  G.arrayType = "recA" //"HexA";//"clA";//
+
+  // /*disable the end bottuns*/
+  // document.getElementById("conBot").disabled=true;
+  // document.getElementById("endBot").disabled=true;
+  //
+  // /*disable the next bottuns*/
+  // if (isNestDis==1){
+  //   document.getElementById("learnWalkButton").disabled=true;
+  //   document.getElementById("endLearnWalkButton").disabled=true;
+  //   document.getElementById("skipR").disabled=true;
+  //   document.getElementById("nextIsM").disabled=true;
+  // }
+
+  function initExp(){ // the first function to be called, formerly called starDisc()
+    /*create/retrive MAPS and save in sql table*/
+
+    document.getElementById("startDiv").style.display="none";
+
+    var subjectId0 = document.getElementById("subjectId").value;
+    if(subjectId0.endsWith("\n")||subjectId0.endsWith(" ")){
+      exp.subjectId = subjectId0.slice(0,subjectId0.length - 1);
+    }else{
+      exp.subjectId = subjectId0;
+    }
+    console.log("Subject Id: " + exp.subjectId);
+
+    exp.curMap = 0
+    // define graph (according to exp.curMap) - transition and adjacency matrices,
+    // and also emission matrix (which node corresponds to which image)
+    defineGraph();
+    save2subjectDetailsAndStartTimeTable();
+
+    /* change display */
+    document.getElementById("globalInstructions").style.display="inline";
+    document.getElementById("startTaskButton").style.display="inline";
+
+  }
+
+  function choosePart(){ // find the task's part in which particpants played with before taking a break. This is only called at the beginning of the session.
+
+    // hide previous tab
+    document.getElementById("globalInstructions").style.display="none"; // hide global instructions html elements
+
+
+    learnRandomPairsTask();
+  }
+
+
+</script>
+
+
+</body>
+</html>
