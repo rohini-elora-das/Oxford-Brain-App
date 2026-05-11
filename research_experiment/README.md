@@ -1,4 +1,4 @@
-# October 2nd Memory Experiment
+# Memory Experiment
 
 This repository contains the October 2nd browser experiment code and the accompanying research paper PDF.
 
